@@ -75,6 +75,9 @@ async def register_options(request: RegisterRequest):
         user = {"email": request.email, "credentials": []}
         await users_collection.insert_one(user)
 
+    elif user and user.get("credentials", []):
+        raise HTTPException(status_code=400, detail="User is already registered with credentials")
+
     options = generate_registration_options(
         rp_id=RP_ID,
         rp_name=RP_NAME,
@@ -99,7 +102,6 @@ async def register_options(request: RegisterRequest):
     await users_collection.update_one(
         {"email": request.email}, {"$set": {"challenge": options.challenge}}
     )
-
     # Convert options to JSON-compatible dict
     options_dict = {
         "rp": {"id": options.rp.id, "name": options.rp.name},
